@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Connector | Emergency Blood Donation & Donor Locator</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+
+    <!-- National Health Portal Top Strip -->
+    <div class="national-strip">
+        <div class="strip-content">
+            <div class="strip-badge">
+                <span>🇮🇳 National Emergency Blood Donation Portal</span>
+                <span style="color: var(--border-color);">|</span>
+                <span>Ministry of Health & Family Welfare</span>
+            </div>
+            <div class="strip-helpline">
+                <i class="fas fa-phone-volume"></i> Emergency Toll-Free Helpline: <strong>104 / 1800-11-2026</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="brand" onclick="showSection('home')">
+                <div class="brand-icon">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Blood Bank Connector</h1>
+                    <span>Rapid Donor Matching System</span>
+                </div>
+            </a>
+
+            <!-- Desktop & Mobile Menu -->
+            <ul class="nav-menu" id="navMenu">
+                <li><a class="nav-link active" id="navHome" onclick="showSection('home')"><i class="fas fa-home"></i> Home</a></li>
+                <li><a class="nav-link" onclick="showSection('search')"><i class="fas fa-search-location"></i> Find Donors</a></li>
+                <li><a class="nav-link" onclick="showSection('directory')"><i class="fas fa-users"></i> All Donors</a></li>
+                <li><a class="nav-link" onclick="showSection('register')"><i class="fas fa-hand-holding-heart"></i> Become a Donor</a></li>
+                <li><a class="nav-link" onclick="showSection('emergency')"><i class="fas fa-ambulance"></i> Emergency Alert</a></li>
+            </ul>
+
+            <!-- Auth Buttons & User Status -->
+            <div class="nav-cta">
+                <!-- Guest View -->
+                <div id="guestNav" class="nav-cta">
+                    <button class="btn btn-outline btn-sm" onclick="showSection('login')">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="showSection('register')">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                </div>
+
+                <!-- Logged In User View (Clicking opens Donor Card!) -->
+                <div id="userNav" class="nav-cta hidden">
+                    <div class="user-chip" onclick="showSection('dashboard'); switchTab('profile');" style="cursor: pointer;" title="View My Digital Donor Card">
+                        <div class="user-avatar" id="userAvatarChar">U</div>
+                        <div class="user-meta">
+                            <span class="user-name" id="userDisplayName">Donor</span>
+                            <span class="user-blood-badge" id="userBloodBadge"></span>
+                        </div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" onclick="logout()" title="Sign Out">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+
+                <!-- Mobile Hamburger Toggle -->
+                <button class="nav-toggle" id="navToggle" aria-label="Toggle Navigation">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section (Shown to Guests or via Home link) -->
+    <section class="hero" id="heroSection">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <span class="pulse-dot"></span>
+                        24/7 Real-Time Emergency Matching Active
+                    </div>
+                    
+                    <h1 class="hero-title">
+                        Connecting Donors & Patients in <span class="highlight">Critical Moments</span>
+                    </h1>
+
+                    <p class="hero-desc">
+                        Our intelligent location-based network bridges the gap between voluntary blood donors and emergency cases within minutes. Locate nearby donors on an interactive live map and save lives instantly.
+                    </p>
+
+                    <div class="hero-actions">
+                        <button class="btn btn-primary btn-lg" onclick="showSection('search')">
+                            <i class="fas fa-search-location"></i> Find Donors Nearby
+                        </button>
+                        <button class="btn btn-secondary btn-lg" onclick="showSection('directory')">
+                            <i class="fas fa-users"></i> View All Donors
+                        </button>
+                        <button class="btn btn-outline btn-lg" onclick="showSection('register')">
+                            <i class="fas fa-heart"></i> Register as Donor
+                        </button>
+                    </div>
+
+                    <!-- Impact Stats Counter -->
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <h3>14,800<span>+</span></h3>
+                            <p>Verified Donors</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>9,420<span>+</span></h3>
+                            <p>Emergencies Served</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>&lt; 8 <span>min</span></h3>
+                            <p>Avg Match Response</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hero Visual Stack -->
+                <div class="hero-visual">
+                    <div class="hero-card-stack">
+                        <!-- Simulated Live Urgent Card -->
+                        <div class="hero-glass-card hero-emergency-card">
+                            <div class="card-top">
+                                <span class="urgency-pill urgency-critical">
+                                    <span class="pulse-dot" style="background:#dc2626"></span> CRITICAL EMERGENCY
+                                </span>
+                                <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">2 mins ago</span>
+                            </div>
+                            <div class="card-body-preview">
+                                <div class="blood-drop-badge">O-</div>
+                                <div class="card-info">
+                                    <h4>Universal Donor Needed (2 Units)</h4>
+                                    <p><i class="fas fa-hospital" style="color:var(--secondary)"></i> AIIMS Trauma Centre, New Delhi</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Verified Donor Card -->
+                        <div class="hero-glass-card">
+                            <div class="card-top">
+                                <span class="urgency-pill urgency-low">
+                                    <i class="fas fa-shield-alt"></i> VERIFIED MATCH
+                                </span>
+                                <span style="font-size: 11px; color: var(--success); font-weight: 700;">Within 2.8 km</span>
+                            </div>
+                            <div class="card-body-preview">
+                                <div class="donor-avatar" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h4>Dr. Rajesh Kumar (B+)</h4>
+                                    <p><i class="fas fa-map-marker-alt" style="color:var(--primary)"></i> South Extension, New Delhi • Available Now</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Blood Compatibility Interactive Selector -->
+                        <div class="compatibility-strip">
+                            <div class="compatibility-title">
+                                <i class="fas fa-info-circle" style="color: var(--primary)"></i>
+                                <span>Check Blood Compatibility Matrix:</span>
+                            </div>
+                            <div class="blood-pills">
+                                <button type="button" class="blood-pill active" data-blood="O-">O-</button>
+                                <button type="button" class="blood-pill" data-blood="O+">O+</button>
+                                <button type="button" class="blood-pill" data-blood="A+">A+</button>
+                                <button type="button" class="blood-pill" data-blood="A-">A-</button>
+                                <button type="button" class="blood-pill" data-blood="B+">B+</button>
+                                <button type="button" class="blood-pill" data-blood="B-">B-</button>
+                                <button type="button" class="blood-pill" data-blood="AB+">AB+</button>
+                                <button type="button" class="blood-pill" data-blood="AB-">AB-</button>
+                            </div>
+                            <div id="compatText" style="margin-top: 10px; font-size: 12px; color: var(--text-muted);">
+                                <strong>O-</strong> Can Donate To: <span style="color: var(--primary); font-weight:700;">Everyone (Universal Donor)</span> | Can Receive From: <span style="color: var(--secondary); font-weight:700;">O- only</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        <div class="container">
+
+            <!-- ========================================================
+                 SECTION: REGISTER (BECOME A DONOR)
+                 ======================================================== -->
+            <section id="registerSection" class="hidden">
+                <div class="section-head">
+                    <h2><i class="fas fa-hand-holding-heart" style="color: var(--primary)"></i> Join as a Voluntary Donor</h2>
+                    <p>Your one donation can save up to three lives. Fill in your details and pin your location to get notified during emergencies.</p>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-user-circle" style="color: var(--primary)"></i> Donor Registration</h3>
+                            <span style="font-size: 12px; color: var(--text-muted);">Step 1 of 1</span>
+                        </div>
+                        <div class="card-body">
+                            <form id="registerForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-user"></i> Full Name</label>
+                                        <input type="text" class="form-control" id="regName" placeholder="e.g. Aditi Sharma" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-envelope"></i> Email Address</label>
+                                        <input type="email" class="form-control" id="regEmail" placeholder="aditi@example.com" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-lock"></i> Password</label>
+                                        <input type="password" class="form-control" id="regPassword" placeholder="Min 6 characters" minlength="6" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-phone"></i> Phone Number</label>
+                                        <input type="tel" class="form-control" id="regPhone" placeholder="+91 98765 43210" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-tint"></i> Blood Group</label>
+                                        <select class="form-control" id="regBloodGroup" required>
+                                            <option value="">Select Blood Group</option>
+                                            <option value="A+">A+ (A Positive)</option>
+                                            <option value="A-">A- (A Negative)</option>
+                                            <option value="B+">B+ (B Positive)</option>
+                                            <option value="B-">B- (B Negative)</option>
+                                            <option value="AB+">AB+ (AB Positive)</option>
+                                            <option value="AB-">AB- (AB Negative)</option>
+                                            <option value="O+">O+ (O Positive)</option>
+                                            <option value="O-">O- (O Negative)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-map-marked-alt"></i> Residential Address</label>
+                                        <input type="text" class="form-control" id="regAddress" placeholder="Street, Locality, City" required>
+                                    </div>
+                                </div>
+
+                                <!-- Interactive Map Pin for Registration Location -->
+                                <div class="form-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <label style="margin-bottom: 0;"><i class="fas fa-map-pin"></i> Pin Your Location on Map</label>
+                                        <button type="button" class="btn btn-outline btn-sm" id="getRegLocationBtn" onclick="getRegLocation()">
+                                            <i class="fas fa-crosshairs"></i> Auto-Detect GPS
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="map-container-wrapper">
+                                        <div id="regMap"></div>
+                                    </div>
+                                    <div class="map-helper-text" id="regLocationText">
+                                        <i class="fas fa-info-circle"></i> Click anywhere on the map to set your donation coordinates.
+                                    </div>
+
+                                    <div class="form-row" style="margin-top: 12px;">
+                                        <input type="number" step="any" class="form-control" id="regLat" placeholder="Latitude" required readonly>
+                                        <input type="number" step="any" class="form-control" id="regLng" placeholder="Longitude" required readonly>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                                    <i class="fas fa-heart"></i> Register as Voluntary Donor
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Info & Trust Badges -->
+                    <div style="display: flex; flex-direction: column; gap: 24px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-shield-alt" style="color: var(--secondary)"></i> Donor Guidelines & Impact</h3>
+                            </div>
+                            <div class="card-body">
+                                <div style="display: flex; flex-direction: column; gap: 18px;">
+                                    <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                        <div style="width: 44px; height: 44px; border-radius: 10px; background: #ffe4e6; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <div>
+                                            <h4 style="font-size: 15px; font-weight: 700; color: var(--dark);">Rapid Matching Engine</h4>
+                                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">When a critical request is placed, nearby registered donors within 10 km are instantly alerted via email.</p>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                        <div style="width: 44px; height: 44px; border-radius: 10px; background: #d1fae5; color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                                            <i class="fas fa-lock"></i>
+                                        </div>
+                                        <div>
+                                            <h4 style="font-size: 15px; font-weight: 700; color: var(--dark);">Privacy First</h4>
+                                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">Your exact residence address is never exposed publicly. Only proximity distance is calculated.</p>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                        <div style="width: 44px; height: 44px; border-radius: 10px; background: #fef3c7; color: var(--warning); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                                            <i class="fas fa-check-double"></i>
+                                        </div>
+                                        <div>
+                                            <h4 style="font-size: 15px; font-weight: 700; color: var(--dark);">Basic Eligibility</h4>
+                                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">Age 18–65, weight > 45kg, hemoglobin > 12.5 g/dL. Safe, quick, and rewarding.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card" style="background: linear-gradient(135deg, var(--dark) 0%, #1e293b 100%); color: white; padding: 28px;">
+                            <h4 style="font-size: 18px; font-weight: 800; margin-bottom: 8px;">Already Registered?</h4>
+                            <p style="font-size: 13.5px; color: #94a3b8; margin-bottom: 20px;">Sign in to your donor account to access real-time searches, view your digital donor card, or manage requests.</p>
+                            <button class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.3);" onclick="showSection('login')">
+                                <i class="fas fa-sign-in-alt"></i> Access Donor Portal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 SECTION: LOGIN
+                 ======================================================== -->
+            <section id="loginSection" class="hidden">
+                <div style="max-width: 460px; margin: 20px auto;">
+                    <div class="card">
+                        <div class="card-header" style="justify-content: center; text-align: center; flex-direction: column; gap: 6px; padding: 28px 24px 20px;">
+                            <div style="width: 52px; height: 52px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <h3 style="font-size: 20px; font-weight: 800;">Donor Sign In</h3>
+                            <p style="font-size: 13px; color: var(--text-muted);">Access your emergency matching dashboard</p>
+                        </div>
+                        <div class="card-body">
+                            <form id="loginForm">
+                                <div class="form-group">
+                                    <label><i class="fas fa-envelope"></i> Email Address</label>
+                                    <input type="email" class="form-control" id="loginEmail" placeholder="your@email.com" required>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-key"></i> Password</label>
+                                    <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                                    <i class="fas fa-arrow-right"></i> Sign In to Portal
+                                </button>
+                                <p style="text-align: center; margin-top: 20px; font-size: 13.5px; color: var(--text-muted);">
+                                    New to Blood Bank Connector? 
+                                    <a href="#" onclick="showSection('register')" style="color: var(--primary); font-weight: 700;">Create an account</a>
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 SECTION: DASHBOARD (SEARCH, DIRECTORY, EMERGENCY, REQUESTS, PROFILE)
+                 ======================================================== -->
+            <section id="dashboardSection" class="hidden">
+                <!-- Dashboard Tab Switcher -->
+                <div class="tabs-nav" id="dashboardTabs">
+                    <button class="tab-btn active" id="tabBtnSearch" onclick="switchTab('search')">
+                        <i class="fas fa-search-location"></i> Find Donors
+                    </button>
+                    <button class="tab-btn" id="tabBtnDirectory" onclick="switchTab('directory')">
+                        <i class="fas fa-users"></i> All Donors
+                    </button>
+                    <button class="tab-btn" id="tabBtnEmergency" onclick="switchTab('emergency')">
+                        <i class="fas fa-ambulance"></i> Emergency Request
+                    </button>
+                    <button class="tab-btn" id="tabBtnRequests" onclick="switchTab('requests')">
+                        <i class="fas fa-bullhorn"></i> Active Requests
+                    </button>
+                    <button class="tab-btn" id="tabBtnProfile" onclick="switchTab('profile')">
+                        <i class="fas fa-id-card"></i> My Donor Card
+                    </button>
+                </div>
+
+                <!-- ----------------------------------------------------
+                     TAB 1: FIND NEARBY DONORS & LEAFLET MAP
+                     ---------------------------------------------------- -->
+                <div id="searchTab">
+                    <!-- Search Controls Card -->
+                    <div class="search-bar-card">
+                        <form id="searchForm" class="search-form-grid">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label><i class="fas fa-hospital-alt"></i> Hospital / Patient Location</label>
+                                <div class="input-with-action">
+                                    <input type="text" class="form-control" id="locationDisplay" placeholder="Auto-detect or click on map" readonly>
+                                    <button type="button" class="btn btn-outline" id="getSearchLocationBtn" onclick="getSearchLocation()" title="Use GPS Location">
+                                        <i class="fas fa-location-arrow"></i> GPS
+                                    </button>
+                                </div>
+                                <input type="hidden" id="searchLat">
+                                <input type="hidden" id="searchLng">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label><i class="fas fa-tint"></i> Blood Group</label>
+                                <select class="form-control" id="searchBloodGroup" required>
+                                    <option value="">Select Group</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label><i class="fas fa-bullseye"></i> Search Radius</label>
+                                <select class="form-control" id="searchRadius">
+                                    <option value="5">5 km radius</option>
+                                    <option value="10" selected>10 km radius</option>
+                                    <option value="25">25 km radius</option>
+                                    <option value="50">50 km radius</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="height: 48px; padding: 0 24px;">
+                                <i class="fas fa-search"></i> Search Donors
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Interactive Map Container -->
+                    <div class="map-container-wrapper">
+                        <div class="map-toolbar">
+                            <div class="map-chip">
+                                <i class="fas fa-map-pin" style="color: var(--primary)"></i> Click on map to change search center
+                            </div>
+                        </div>
+                        <div id="searchMap"></div>
+                    </div>
+
+                    <!-- Search Results Section -->
+                    <div class="results-meta">
+                        <div class="results-count">
+                            Matched Donors Nearby: <span id="donorCount">0</span>
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted);">
+                            Sorted by closest geographical distance
+                        </div>
+                    </div>
+
+                    <!-- Results Donor Cards Grid -->
+                    <div class="grid-3" id="donorResults">
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-search-location"></i>
+                            </div>
+                            <h3>Search for Compatible Donors</h3>
+                            <p>Capture your current location using the GPS button above or click anywhere on the map, select the required blood group, and click "Search Donors".</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ----------------------------------------------------
+                     TAB 2: ALL REGISTERED DONORS DIRECTORY
+                     ---------------------------------------------------- -->
+                <div id="directoryTab" class="hidden">
+                    <div class="results-meta">
+                        <div>
+                            <h2 style="font-size: 22px; font-weight: 800; color: var(--dark);"><i class="fas fa-users" style="color: var(--primary)"></i> All Registered Donors</h2>
+                            <p style="font-size: 14px; color: var(--text-muted); margin-top: 2px;">Real-time database directory of voluntary donors on the portal.</p>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="loadAllDonors()">
+                            <i class="fas fa-sync-alt"></i> Refresh Directory
+                        </button>
+                    </div>
+
+                    <div class="grid-3" id="allDonorsResults">
+                        <!-- Populated dynamically via loadAllDonors() -->
+                    </div>
+                </div>
+
+                <!-- ----------------------------------------------------
+                     TAB 3: CREATE EMERGENCY BLOOD REQUEST
+                     ---------------------------------------------------- -->
+                <div id="emergencyTab" class="hidden">
+                    <div class="section-head" style="margin-bottom: 24px;">
+                        <h2><i class="fas fa-ambulance" style="color: var(--danger)"></i> Broadcast Emergency Blood Alert</h2>
+                        <p>Creates an urgent requirement and automatically dispatches immediate email notifications to registered donors within a 10 km radius.</p>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header" style="background: linear-gradient(135deg, #fff1f2 0%, #fee2e2 100%);">
+                                <h3><i class="fas fa-exclamation-triangle" style="color: var(--danger)"></i> Emergency Details</h3>
+                                <span class="urgency-pill urgency-critical">High Priority</span>
+                            </div>
+                            <div class="card-body">
+                                <form id="emergencyForm">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label><i class="fas fa-user-injured"></i> Patient Full Name</label>
+                                            <input type="text" class="form-control" id="emPatientName" placeholder="Patient's Name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><i class="fas fa-tint"></i> Blood Group Needed</label>
+                                            <select class="form-control" id="emBloodGroup" required>
+                                                <option value="">Select Blood Group</option>
+                                                <option value="A+">A+</option>
+                                                <option value="A-">A-</option>
+                                                <option value="B+">B+</option>
+                                                <option value="B-">B-</option>
+                                                <option value="AB+">AB+</option>
+                                                <option value="AB-">AB-</option>
+                                                <option value="O+">O+</option>
+                                                <option value="O-">O-</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label><i class="fas fa-vial"></i> Units Required</label>
+                                            <input type="number" class="form-control" id="emUnits" value="1" min="1" max="15" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><i class="fas fa-tachometer-alt"></i> Urgency Level</label>
+                                            <select class="form-control" id="emUrgency" required>
+                                                <option value="CRITICAL">Critical - Immediate (Life Threatening)</option>
+                                                <option value="MEDIUM" selected>Medium - Required within 6 Hours</option>
+                                                <option value="LOW">Low - Required within 24 Hours</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label><i class="fas fa-hospital"></i> Hospital / Medical Center Name</label>
+                                        <input type="text" class="form-control" id="emHospital" placeholder="e.g. AIIMS Delhi / Apollo Hospital" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label><i class="fas fa-map-marked-alt"></i> Hospital Address</label>
+                                        <textarea class="form-control" id="emAddress" rows="2" placeholder="Full address and ward/block details" required></textarea>
+                                    </div>
+
+                                    <!-- Hospital Location Picker Map -->
+                                    <div class="form-group">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                            <label style="margin-bottom: 0;"><i class="fas fa-map-pin"></i> Pin Hospital Location on Map</label>
+                                            <button type="button" class="btn btn-outline btn-sm" onclick="getEmergencyLocation()">
+                                                <i class="fas fa-crosshairs"></i> Set Hospital to Current GPS
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="map-container-wrapper">
+                                            <div id="emMap"></div>
+                                        </div>
+                                        <div class="map-helper-text" id="emLocationText">
+                                            <i class="fas fa-info-circle"></i> Click on the map to pinpoint hospital coordinates.
+                                        </div>
+
+                                        <div class="form-row" style="margin-top: 12px;">
+                                            <input type="number" step="any" class="form-control" id="emLat" placeholder="Latitude" required readonly>
+                                            <input type="number" step="any" class="form-control" id="emLng" placeholder="Longitude" required readonly>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-danger btn-lg" style="width: 100%;">
+                                        <i class="fas fa-paper-plane"></i> Broadcast Emergency Request to Donors
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Info side -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-bell" style="color: var(--primary)"></i> How Alerts Are Dispatched</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div style="display: flex; flex-direction: column; gap: 14px;">
+                                        <div style="padding: 14px; background: #fff1f2; border-radius: var(--radius-md); border-left: 4px solid var(--primary);">
+                                            <h4 style="font-size: 14px; color: var(--primary-dark); margin-bottom: 4px;">
+                                                <i class="fas fa-envelope-open-text"></i> Automated Email Notifications
+                                            </h4>
+                                            <p style="font-size: 13px; color: var(--dark);">All registered donors with matching blood type residing within 10 km will receive an urgent email with patient and hospital coordinates.</p>
+                                        </div>
+
+                                        <div style="padding: 14px; background: #e0f2fe; border-radius: var(--radius-md); border-left: 4px solid var(--secondary);">
+                                            <h4 style="font-size: 14px; color: #0369a1; margin-bottom: 4px;">
+                                                <i class="fas fa-shield-virus"></i> Donor Verification
+                                            </h4>
+                                            <p style="font-size: 13px; color: var(--dark);">Only active donors verified in the database are queried to maximize immediate pledge conversions.</p>
+                                        </div>
+
+                                        <div style="padding: 14px; background: #d1fae5; border-radius: var(--radius-md); border-left: 4px solid var(--success);">
+                                            <h4 style="font-size: 14px; color: #065f46; margin-bottom: 4px;">
+                                                <i class="fas fa-check-circle"></i> Live Community Response
+                                            </h4>
+                                            <p style="font-size: 13px; color: var(--dark);">The request will be broadcast in the "Active Requests" tab where nearby donors can directly pledge support.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ----------------------------------------------------
+                     TAB 4: ACTIVE REQUESTS LIST
+                     ---------------------------------------------------- -->
+                <div id="requestsTab" class="hidden">
+                    <div class="results-meta">
+                        <div>
+                            <h2 style="font-size: 22px; font-weight: 800; color: var(--dark);"><i class="fas fa-bullhorn" style="color: var(--primary)"></i> Active Emergency Requests</h2>
+                            <p style="font-size: 14px; color: var(--text-muted); margin-top: 2px;">Ongoing blood appeals needing voluntary donors right now.</p>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="loadActiveRequests()">
+                            <i class="fas fa-sync-alt"></i> Refresh List
+                        </button>
+                    </div>
+
+                    <div id="activeRequests">
+                        <!-- Populated dynamically via app.js -->
+                    </div>
+                </div>
+
+                <!-- ----------------------------------------------------
+                     TAB 5: MY DONOR CARD / DIGITAL PROFILE
+                     ---------------------------------------------------- -->
+                <div id="profileTab" class="hidden">
+                    <div class="section-head" style="margin-bottom: 24px;">
+                        <h2><i class="fas fa-id-card" style="color: var(--primary)"></i> Official Donor Identity Card</h2>
+                        <p>Your verified digital registration card on the National Blood Bank Connector network.</p>
+                    </div>
+
+                    <!-- Digital Card -->
+                    <div class="donor-id-card" id="donorIdCardElement">
+                        <div class="donor-id-card-top">
+                            <div class="donor-id-logo">
+                                <div style="font-size: 30px;">🩸</div>
+                                <div>
+                                    <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">Blood Bank Connector</div>
+                                    <div style="font-size: 10px; color: #f43f5e; font-weight: 700; letter-spacing: 0.1em;">National Voluntary Donor Network</div>
+                                </div>
+                            </div>
+                            <div class="donor-id-badge" id="profileBloodGroupBadge">O+</div>
+                        </div>
+
+                        <div style="display: flex; gap: 20px; align-items: center;">
+                            <div class="donor-id-avatar" id="profileAvatarChar">U</div>
+                            <div>
+                                <div class="donor-id-name" id="profileName">User Name</div>
+                                <div class="donor-id-number" id="profileDonorId">ID: BBC-DONOR-0001</div>
+                                <div style="margin-top: 6px;">
+                                    <span class="status-badge status-available" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 12px;">
+                                        <i class="fas fa-circle" style="font-size: 8px;"></i> Active Lifesaver
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="donor-id-meta-grid">
+                            <div class="donor-id-meta-item">
+                                <span>Contact Number</span>
+                                <strong id="profilePhone">+91 XXXXX XXXXX</strong>
+                            </div>
+                            <div class="donor-id-meta-item">
+                                <span>Email ID</span>
+                                <strong id="profileEmail">user@example.com</strong>
+                            </div>
+                            <div class="donor-id-meta-item" style="grid-column: 1 / -1;">
+                                <span>Registered Address</span>
+                                <strong id="profileAddress">Address on file</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="switchTab('search')">
+                            <i class="fas fa-search-location"></i> Search Nearby Patients In Need
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="brand" style="margin-bottom: 14px;">
+                        <div class="brand-icon" style="width: 36px; height: 36px; font-size: 18px;">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <div class="brand-text">
+                            <h1 style="color: white; font-size: 17px;">Blood Bank Connector</h1>
+                            <span style="color: #f43f5e; font-size: 10px;">National Emergency Portal</span>
+                        </div>
+                    </div>
+                    <p>
+                        A mission-driven open healthcare initiative connecting voluntary blood donors directly with intensive care patients and hospitals during life-threatening medical emergencies.
+                    </p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Quick Navigation</h4>
+                    <ul class="footer-links">
+                        <li><a href="#" onclick="showSection('home')">Home Overview</a></li>
+                        <li><a href="#" onclick="showSection('search')">Find Nearby Donors</a></li>
+                        <li><a href="#" onclick="showSection('directory')">All Registered Donors</a></li>
+                        <li><a href="#" onclick="showSection('register')">Become a Donor</a></li>
+                        <li><a href="#" onclick="showSection('emergency')">Emergency Alerts</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Donor Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Eligibility Requirements</a></li>
+                        <li><a href="#">Blood Compatibility Chart</a></li>
+                        <li><a href="#">Donation Best Practices</a></li>
+                        <li><a href="#">Donor Privacy & Security</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Emergency Helpdesk</h4>
+                    <p style="color: white; font-weight: 700; margin-bottom: 8px;">
+                        <i class="fas fa-phone-alt" style="color: var(--primary)"></i> 1800-11-2026 (Toll-Free)
+                    </p>
+                    <p style="color: #94a3b8; font-size: 13px;">
+                        <i class="fas fa-envelope"></i> emergency@bloodbankconnector.gov.in<br>
+                        <i class="fas fa-map-marker-alt"></i> Ministry of Health, New Delhi, India
+                    </p>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                &copy; 2026 Blood Bank Connector | National Health Information System. All Rights Reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS CDN -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Application Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
